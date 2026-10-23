@@ -1,0 +1,150 @@
+================================================================================
+AI SYSTEM REFACTORING & INTEGRATION PROMPT
+Project: AI Assistive Vision System for Visually Impaired
+================================================================================
+
+[CONTEXT & ROLE]
+You are a Principal AI & Computer Vision Software Engineer. 
+In this workspace, we have two projects:
+1. OUR CURRENT PROJECT (the root folder where you are running):
+   - It contains newly written features that we WANT TO KEEP:
+     * Auto camera detection (automatic webcam indexing / IP camera discovery).
+     * Enhanced speaker/audio output features (device selection / sound routing).
+   - BUT the computer vision detection pipelines and model training code here are
+     overengineered, overly complex, unstable, or not working properly.
+
+2. THE REFERENCE PROJECT ("project555" subfolder):
+   - A fully functional, tested, and rock-solid assistive vision system with
+     exact working AI models, clean pipelines, real-time XAI visual HUDs,
+     and non-blocking voice guidance.
+   - GitHub: https://github.com/farzinsalam/project555.git
+
+YOUR GOAL:
+Refactor our project by replacing the broken/overengineered detection and model
+training code with the exact, proven implementations from "project555", while
+preserving and seamlessly integrating our new Auto Camera Detection and Speaker
+features. Do not overcomplicate the architecture. Keep it fast, modular, and reliable.
+
+--------------------------------------------------------------------------------
+PHASE 1: ENVIRONMENT & REFERENCE REPO SETUP (Run First)
+--------------------------------------------------------------------------------
+If "project555" is not already cloned inside this workspace, run:
+```powershell
+# 1. Clone the reference project
+git clone https://github.com/farzinsalam/project555.git project555
+
+# 2. Pull all Git LFS binary AI models (crucial for YOLO, ONNX & PyTorch weights)
+cd project555
+git lfs install
+git lfs pull
+cd ..
+
+# 3. Ensure all core dependencies are installed
+pip install ultralytics opencv-python pyttsx3 pywin32 SpeechRecognition winocr easyocr torch torchvision numpy pillow
+```
+
+--------------------------------------------------------------------------------
+PHASE 2: UNDERSTANDING THE 6 PROVEN DETECTION MODULES IN "project555"
+--------------------------------------------------------------------------------
+You must copy/adapt the exact working logic and models from `project555`:
+
+1. MODULE 01: Real-Time Walking Assistance (`01_real_time_walking_assistance/`)
+   - Tech: OpenCV DNN MobileNet SSD / YOLOv8 with monocular distance triangulation.
+   - Spatial logic: 3-corridor analysis (Left, Center, Right) + directional cues:
+     "Walk Straight", "Steer Left", "Steer Right", "Stop - Obstacle Ahead".
+   - Model: `models/frozen_inference_graph.pb` or `yolov8n.pt`.
+
+2. MODULE 02: Approaching Vehicle Detection (`02_approaching_vehicle_detection/`)
+   - Tech: Multi-target optical bounding box expansion rate (dA/dt) tracking.
+   - Physics: Time-to-Collision (TTC) model.
+   - Alert: Immediate high-priority voice warnings if a vehicle is closing in fast.
+
+3. MODULE 03: Obstacle & Path-Hazard Detection (`03_obstacle_and_path_hazard_detection/`)
+   - Tech: Multi-zone spatial computer vision:
+     * Floor adaptive contrast cavities for pothole detection.
+     * Sobel filter + Hough transform for staircase/step edge detection (up/down).
+     * Upper eye-level edge density for low tree branches / overhead bars.
+     * Specular glint reflection analysis for wet/slippery floors.
+
+4. MODULE 04: Familiar Person Recognition (`04_familiar_person_recognition/`)
+   - Tech: Deep metric learning using OpenCV YuNet face detector + SFace 128-D matcher.
+   - Models:
+     * `04_familiar_person_recognition/models/face_detection_yunet_2023mar.onnx`
+     * `04_familiar_person_recognition/models/face_recognition_sface_2021dec.onnx`
+   - Features: Encodes reference photos from `known_faces/` (supports .jpg, .png, .heic).
+     Provides spatial position ("Sandra is in front of you, 2 meters away").
+
+5. MODULE 05: Indian Currency Recognition (`05_currency_recognition/`)
+   - Tech: MobileNetV3 deep classifier trained for Indian banknotes (10, 20, 50, 100, 200, 500, 2000).
+   - Weights: `05_currency_recognition/indian_currency_mobilenet.pth`.
+   - Stability: 4-frame Temporal Consistency Filter (prevents noisy flickering).
+   - Features: Automatic denomination voice announcement + running wallet tally.
+   - Training pipeline: `train_classifier.py` using PyTorch CrossEntropyLoss & Adam.
+
+6. MODULE 06: Text Reading / OCR (`06_text_reading/`)
+   - Tech: Dual-mode OCR engine:
+     * Mode 1 (Live Spotter): Fast signboard & product label detection.
+     * Mode 2 (Document Reader): Windows native WinOCR / EasyOCR with structured
+       sentence parser and voice controls (Pause, Repeat, Next).
+
+7. SHARED INFRASTRUCTURE (`shared/`):
+   - `shared/camera_stream.py`: High-throughput zero-latency threaded camera reader.
+   - `shared/audio_engine.py`: Non-blocking SAPI speech queue with priority interrupts.
+   - `shared/vision_utils.py`: Standard HUD overlays, distance calculation, bounding boxes.
+   - `shared/voice_listener.py`: Background speech recognition hotword/command listener.
+
+8. MASTER DISPATCHER (`main.py`):
+   - Unified master application that allows hands-free voice switching between all modules:
+     "Walking assistance", "Vehicle detection", "Hazard", "Person", "Currency", "Read text".
+
+--------------------------------------------------------------------------------
+PHASE 3: INTEGRATION RULES (What to Keep vs What to Replace)
+--------------------------------------------------------------------------------
+1. DO NOT TOUCH OR BREAK the new Auto Camera Detection:
+   - Identify the auto camera detection function from our new laptop code (e.g.,
+     scanning camera indices 0..5 or auto-probing network IP camera streams).
+   - Wire this directly into `shared/camera_stream.py` as the default source provider.
+
+2. DO NOT TOUCH OR BREAK the new Speaker Selection / Audio Output feature:
+   - Identify the audio/speaker device configuration from our new laptop code.
+   - Wire this into `shared/audio_engine.py` so pyttsx3 / Windows SAPI outputs
+     sound directly to the selected speaker device.
+
+3. DISCARD OVERENGINEERED / BROKEN DETECTION CODE:
+   - Completely remove custom overly convoluted neural network abstractions,
+     untested mathematical filters, or broken async wrappers that cause lag/crashes.
+   - Replace them cleanly with the battle-tested modules from `project555`.
+
+4. COPY MODEL WEIGHTS:
+   - Ensure the large model files are copied into the proper directories:
+     * `yolov8n.pt` -> root directory
+     * `face_detection_yunet_2023mar.onnx` -> `04_familiar_person_recognition/models/`
+     * `face_recognition_sface_2021dec.onnx` -> `04_familiar_person_recognition/models/`
+     * `indian_currency_mobilenet.pth` -> `05_currency_recognition/`
+     * `frozen_inference_graph.pb` -> `models/` and `shared/models/`
+     * `known_faces/` folder -> root directory
+
+--------------------------------------------------------------------------------
+PHASE 4: EXECUTION & VERIFICATION CHECKLIST
+--------------------------------------------------------------------------------
+Please complete the refactoring in order and verify each step:
+
+[ ] 1. Audit new code's Auto Camera & Speaker features and extract clean helper functions.
+[ ] 2. Copy the 6 module directories and `shared/` from `project555`.
+[ ] 3. Plug the Auto Camera helper into `shared/camera_stream.py`.
+[ ] 4. Plug the Speaker device routing into `shared/audio_engine.py`.
+[ ] 5. Test camera stream: Verify video opens at 30+ FPS without dropped frames.
+[ ] 6. Test standalone modules:
+     - `python -m 01_real_time_walking_assistance.main`
+     - `python -m 02_approaching_vehicle_detection.main`
+     - `python -m 03_obstacle_and_path_hazard_detection.main`
+     - `python -m 04_familiar_person_recognition.main`
+     - `python -m 05_currency_recognition.main`
+     - `python -m 06_text_reading.main`
+[ ] 7. Test master controller:
+     - Run `python main.py`
+     - Verify voice switching and keyboard shortcuts work smoothly.
+     - Confirm speaker announces commands crisply through the chosen speaker.
+
+DO NOT OVERENGINEER. Keep code straightforward, readable, and well-commented.
+================================================================================
